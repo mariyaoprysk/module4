@@ -16,7 +16,8 @@ where ct.categoryid in
 --4
 select distinct p.productname, p.retailprice, ct.categorydescription
 from Products p
-inner join Categories ct on (p.categoryid = ct.categoryid);
+inner join Categories ct on (p.categoryid = ct.categoryid)
+inner join Product_Vendors pv on (p.ProductNumber = pv.ProductNumber); 
 
 --5
 select v.vendname
@@ -50,16 +51,29 @@ from Vendors v
 order by v.vendcity;
 
 --12
-select pv.productnumber, pv.daystodeliver
-from Product_Vendors pv;
+select od.OrderNumber, max(pv.daystodeliver) as max_daystodeliver
+from Order_Details od 
+inner join Product_Vendors pv on (od.ProductNumber = pv.ProductNumber)
+group by od.OrderNumber
+order by od.OrderNumber;
 
 --13
 select p.productnumber, p.productname, p.retailprice*p.quantityonhand as sum_value
 from Products p;
 
 --14
-select ordernumber, shipdate, orderdate, datediff(day,orderdate,shipdate) as days_count
-from Orders;
+with dl 
+as
+(select od.OrderNumber, max(pv.daystodeliver) as max_daystodeliver
+from Order_Details od 
+inner join Product_Vendors pv on (od.ProductNumber = pv.ProductNumber)
+group by od.OrderNumber
+) 
+select o.ordernumber, --o.shipdate, o.orderdate, 
+       --datediff(day,o.orderdate,o.shipdate) as days_count,
+	   dl.max_daystodeliver + datediff(day,o.orderdate,o.shipdate) as sum_delivery
+from Orders o
+inner join dl on (o.ordernumber = dl.ordernumber);
 
 --tasks
 --1
